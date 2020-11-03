@@ -26,6 +26,9 @@ def get_mmsk(lam, miu, s, k):
 	w = wq + (1 / miu)
 	l = lam_e * w
 
+	#TODO regresar los valores en una lista como el M_M_s porfa
+	# tiene que ser [p0, Pn (o pk como esta aqui), Cn, rho, l, w, wq, lq]
+
 	print("p0: " + str(p0))
 	print("pk: " + str(pk))
 	print("lq: " + str(lq))
@@ -33,7 +36,5 @@ def get_mmsk(lam, miu, s, k):
 	print("wq: " + str(wq))
 	print("w: " + str(w))
 	print("l: " + str(l))
-
-get_mmsk(2, 3, 1, 3)
 
 	
