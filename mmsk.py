@@ -1,6 +1,8 @@
 import math
 
 def get_mmsk(lam, miu, s, k):
+	mmsk_list = []
+	
 	sum_1 = 0
 	sum_2 = 0
 	
@@ -14,6 +16,14 @@ def get_mmsk(lam, miu, s, k):
 
 	p0 = 1 / (sum_1 + (mid * sum_2))
 	pk = (math.pow(lam / miu, k) / (math.factorial(s) * math.pow(s, k-1))) * p0
+
+	cn_less_s = "(" + str(lam) + "/" + str(miu) + ")^n/n!"
+	cn_s_to_k = "(" + str(lam) + "/" + str(miu) + ")^n/s!s^(n-s)"
+	cn_more_k = str(0)
+
+	pn_less_s = "((" + str(lam) + "/" + str(miu) + ")^n/n!) * " + str(p0)
+	pn_s_to_k = "((" + str(lam) + "/" + str(miu) + ")^n/s!s^(n-s)) * " + str(p0)
+	pn_more_k = str(0)
 
 	rho = lam / (s * miu)
 
@@ -29,12 +39,26 @@ def get_mmsk(lam, miu, s, k):
 	#TODO regresar los valores en una lista como el M_M_s porfa
 	# tiene que ser [p0, Pn (o pk como esta aqui), Cn, rho, l, w, wq, lq]
 
-	print("p0: " + str(p0))
-	print("pk: " + str(pk))
-	print("lq: " + str(lq))
-	print("lam_e: " + str(lam_e))
-	print("wq: " + str(wq))
-	print("w: " + str(w))
-	print("l: " + str(l))
+	mmsk_list.append(str("%.4f" % round(p0, 4)))
+	mmsk_list.append(str("%.4f" % round(pk, 4)))
+
+	mmsk_list.append(cn_less_s)
+	mmsk_list.append(cn_s_to_k)
+	mmsk_list.append(cn_more_k)
+
+	mmsk_list.append(pn_less_s)
+	mmsk_list.append(pn_s_to_k)
+	mmsk_list.append(pn_more_k)
+
+	mmsk_list.append(str("%.4f" % round(rho, 4)))
+	mmsk_list.append(str("%.4f" % round(l, 4)))
+	mmsk_list.append(str("%.4f" % round(w, 4)))
+	mmsk_list.append(str("%.4f" % round(wq, 4)))
+	mmsk_list.append(str("%.4f" % round(lq, 4)))
+
+	return mmsk_list
+
+mmsk = get_mmsk(2, 3, 1, 3)
+print(mmsk)
 
 	
