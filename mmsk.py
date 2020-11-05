@@ -1,6 +1,6 @@
 import math
 
-def get_mmsk(lam, miu, s, k, cw=0, cs=0):
+def get_mmsk(lam, miu, s, k, cw=None, cs=None):
 	mmsk_list = []
 	
 	sum_1 = 0
@@ -18,11 +18,11 @@ def get_mmsk(lam, miu, s, k, cw=0, cs=0):
 	pk = (math.pow(lam / miu, k) / (math.factorial(s) * math.pow(s, k-1))) * p0
 
 	cn_less_s = "(" + str(lam) + "/" + str(miu) + ")^n/n!"
-	cn_s_to_k = "(" + str(lam) + "/" + str(miu) + ")^n/s!s^(n-s)"
+	cn_s_to_k = "(" + str(lam) + "/" + str(miu) + ")^n/" + str(s) + "!" + str(s) + "^(n-" + str(s) + ")"
 	cn_more_k = str(0)
 
 	pn_less_s = "((" + str(lam) + "/" + str(miu) + ")^n/n!) * " + str(p0)
-	pn_s_to_k = "((" + str(lam) + "/" + str(miu) + ")^n/s!s^(n-s)) * " + str(p0)
+	pn_s_to_k = "((" + str(lam) + "/" + str(miu) + ")^n/" + str(s) + "!" + str(s) + "^(n-" + str(s) + ")) * " + str(p0)
 	pn_more_k = str(0)
 
 	rho = lam / (s * miu)
@@ -36,7 +36,8 @@ def get_mmsk(lam, miu, s, k, cw=0, cs=0):
 	w = wq + (1 / miu)
 	l = lam_e * w
 
-	ct = (lq * cw) + (s * cs)
+	if(cw and cs):
+		ct = (lq * cw) + (s * cs)
 
 	mmsk_list.append(str("%.4f" % round(p0, 4)))
 	mmsk_list.append(str("%.4f" % round(pk, 4)))
@@ -55,9 +56,8 @@ def get_mmsk(lam, miu, s, k, cw=0, cs=0):
 	mmsk_list.append(str("%.4f" % round(wq, 4)))
 	mmsk_list.append(str("%.4f" % round(lq, 4)))
 
-	if(ct > 0):
+	if(cw and cs):
 		mmsk_list.append(str("%.2f" % round(ct, 2)))
 
 	# Orden de la lista [P0, Pk, Cn...n<=s, Cn...s<n<=k, Cn...n>k, Pn...n<=s, Pn...s<n<=k, Pn...n>k, rho, L, W, Wq, Lq, Ct]
 	return mmsk_list
-	
