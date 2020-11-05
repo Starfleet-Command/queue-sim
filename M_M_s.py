@@ -1,7 +1,7 @@
 import math
 
 
-def m_m_s_internal(lamda, miu, n, s):
+def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
     Cn = 0
     Pn = 0
     Sum_P0 = 0
@@ -38,11 +38,13 @@ def m_m_s_internal(lamda, miu, n, s):
 
     L = lamda*W
 
-    return list([P0, Pn, Cn, rho, L, W, Wq, Lq])
+    C = Lq * Cw + (s*Cs)
+
+    return list([P0, Pn, Cn, rho, L, W, Wq, Lq, C])
 
 
-def mms(lamda, miu, n, s):
-    result = m_m_s_internal(lamda, miu, n, s)
+def mms(lamda, miu, n, s, Cs=None, Cw=None):
+    result = m_m_s_internal(lamda, miu, n, s, Cs, Cw)
 
     return result
 
