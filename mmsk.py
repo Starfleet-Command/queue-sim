@@ -1,6 +1,6 @@
 import math
 
-def get_mmsk(lam, miu, s, k):
+def get_mmsk(lam, miu, s, k, cw, cs):
 	mmsk_list = []
 	
 	sum_1 = 0
@@ -36,8 +36,7 @@ def get_mmsk(lam, miu, s, k):
 	w = wq + (1 / miu)
 	l = lam_e * w
 
-	#TODO regresar los valores en una lista como el M_M_s porfa
-	# tiene que ser [p0, Pn (o pk como esta aqui), Cn, rho, l, w, wq, lq]
+	ct = (lq * cw) + (s * cs)
 
 	mmsk_list.append(str("%.4f" % round(p0, 4)))
 	mmsk_list.append(str("%.4f" % round(pk, 4)))
@@ -55,10 +54,9 @@ def get_mmsk(lam, miu, s, k):
 	mmsk_list.append(str("%.4f" % round(w, 4)))
 	mmsk_list.append(str("%.4f" % round(wq, 4)))
 	mmsk_list.append(str("%.4f" % round(lq, 4)))
+	mmsk_list.append(str("%.2f" % round(ct, 2)))
 
+	# Orden de la lista [P0, Pk, Cn...n<=s, Cn...s<n<=k, Cn...n>k, Pn...n<=s, Pn...s<n<=k, Pn...n>k, rho, L, W, Wq, Lq, Ct]
 	return mmsk_list
-
-mmsk = get_mmsk(2, 3, 1, 3)
-print(mmsk)
 
 	
