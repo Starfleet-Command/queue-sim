@@ -1,8 +1,6 @@
 import math
 
-def get_mmsk(lam, miu, s, k, cw=None, cs=None):
-	mmsk_list = []
-	
+def get_mmsk(lam, miu, s, k, cw=None, cs=None, n=None):
 	sum_1 = 0
 	sum_2 = 0
 	
@@ -25,6 +23,14 @@ def get_mmsk(lam, miu, s, k, cw=None, cs=None):
 	pn_s_to_k = "((" + str(lam) + "/" + str(miu) + ")^n/" + str(s) + "!" + str(s) + "^(n-" + str(s) + ")) * " + str(p0)
 	pn_more_k = str(0)
 
+	if(n):
+		if(n <= s):
+			cn = (math.pow(lam / miu, n) / math.factorial(n)) * p0
+		elif(n <= k):
+			cn = (math.pow(lam / miu, n) / (math.factorial(s) * math.pow(s, n-s))) * p0
+		else:
+			cn = 0
+
 	rho = lam / (s * miu)
 
 	lq_1 = (p0 * math.pow(lam / miu, s) * rho) / (math.factorial(s) * math.pow(1 - rho, 2))
@@ -37,42 +43,31 @@ def get_mmsk(lam, miu, s, k, cw=None, cs=None):
 	l = lam_e * w
 
 	res = {}
-	if(cw and cs):
-		ct = (lq * cw) + (s * cs)
 
-	res["P\u2080"] = p0
-	res["P\u2096"] = pk
+	if(cw and cs):
+		ctlq = (lq * cw) + (s * cs)
+		ctl = (l * cw) + (s * cs)
+
+	res["P\u2080"] = round(p0, 4)
+	res["P\u2096"] = round(pk, 4)
 	res["C\u2099, n<=s"] = cn_less_s
 	res["C\u2099, s<n<=k"] = cn_s_to_k
 	res["C\u2099, n>k"] = cn_more_k
-	res["\u03c1"] = rho
-	res["L"] = l
-	res["W"] = w
-	res["Wq"] = wq
-	res["Lq"] = lq
+	res["P\u2099, n<=s"] = pn_less_s
+	res["P\u2099, s<n<=k"] = pn_s_to_k
+	res["P\u2099, n>k"] = pn_more_k
 
-	# mmsk_list.append(str("%.4f" % round(p0, 4)))
-	# mmsk_list.append(str("%.4f" % round(pk, 4)))
+	if(n):
+		res["P" + str(n)] = round(cn, 4)
 
-	# mmsk_list.append(cn_less_s)
-	# mmsk_list.append(cn_s_to_k)
-	# mmsk_list.append(cn_more_k)
+	res["\u03c1"] = round(rho, 4)
+	res["L"] = round(l, 4)
+	res["W"] = round(w, 4)
+	res["Wq"] = round(wq, 4)
+	res["Lq"] = round(lq, 4)
 
-	# mmsk_list.append(pn_less_s)
-	# mmsk_list.append(pn_s_to_k)
-	# mmsk_list.append(pn_more_k)
-
-	# mmsk_list.append(str("%.4f" % round(rho, 4)))
-	# mmsk_list.append(str("%.4f" % round(l, 4)))
-	# mmsk_list.append(str("%.4f" % round(w, 4)))
-	# mmsk_list.append(str("%.4f" % round(wq, 4)))
-	# mmsk_list.append(str("%.4f" % round(lq, 4)))
-	# if(cw and cs):
-		# mmsk_list.append(str("%.2f" % round(ct, 2)))
-
-	# return mmsk_list
+	if(cw and cs):
+		res["Ct, with Lq"] = round(ctlq, 2)
+		res["Ct, with L"] = round(ctl, 2)
 
 	return res
-
-	# Orden de la lista [P0, Pk, Cn...n<=s, Cn...s<n<=k, Cn...n>k, Pn...n<=s, Pn...s<n<=k, Pn...n>k, rho, L, W, Wq, Lq, Ct]
-	return mmsk_list
