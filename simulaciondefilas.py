@@ -44,7 +44,7 @@ def get_results(model, input_list):
         res = {}
         if model == Model.MMS:
             n = 1 #TODO unhardcode this
-            res = mms.mms(l, m, n, s)
+            res = mms.mms(l, m, n, s, int(input_list[3]), int(input_list[4]))
         elif model == Model.MMSK:
             k = int(input_list[3])
             res = mmsk.get_mmsk(l, m, s, k)
@@ -84,7 +84,7 @@ def make_mms_tab(parent_tab):
     mms_tab = ttk.Frame(master=parent_tab, style='TFrame')
     ##The number of servers
     s_frame = ttk.Frame(master=mms_tab)
-    s_frame.place(relwidth=1, relheight=1/3)
+    s_frame.place(relwidth=1, relheight=1/5)
 
     s_label = ttk.Label(master=s_frame, text="Number of servers (s)", font=45, background=BASE_COL, foreground=TEXT_COL)
     s_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
@@ -97,7 +97,7 @@ def make_mms_tab(parent_tab):
 
     #Lambda
     l_frame = ttk.Frame(master=mms_tab)
-    l_frame.place(relwidth=1, relheight=1/3, rely=1/3)
+    l_frame.place(relwidth=1, relheight=1/5, rely=1/5)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of arrivals" + u" \u03bb", font=45, background=BASE_COL, foreground=TEXT_COL)
     l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
@@ -110,7 +110,7 @@ def make_mms_tab(parent_tab):
 
     ##Miu
     m_frame = ttk.Frame(master=mms_tab)
-    m_frame.place(relwidth=1, relheight=1/3, rely=2/3)
+    m_frame.place(relwidth=1, relheight=1/5, rely=2/5)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence"+ u" \u03bc", font=45, background=BASE_COL, foreground=TEXT_COL)
     m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
@@ -121,8 +121,36 @@ def make_mms_tab(parent_tab):
     foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
     m_description.place(relx=0, rely=0.3)
 
-    ok_btn = tk.Button(master=m_frame, text="OK", anchor="c", command=lambda: get_results(Model.MMS, [s_entry.get(), l_entry.get(), m_entry.get()]))
-    ok_btn.place(relx=0.40, rely=0.7, relheight=0.1, relwidth=0.2)
+    ##Expoected customers k
+    Cs_frame = ttk.Frame(master=mms_tab)
+    Cs_frame.place(relwidth=1, relheight=1/5, rely=3/5)
+
+    Cs_label = tk.Label(master=Cs_frame, text="Server cost C\u209b", bg=BASE_COL, foreground=TEXT_COL, font=45)
+    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
+    Cs_entry = tk.Entry(master=Cs_frame, font=45)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text="\tCost of maintaining a single server over a time interval. (Can be left blank)", 
+    foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    Cs_description.place(relx=0, rely=0.3)
+
+    ##Cost of waiting in line
+    Cw_frame = ttk.Frame(master=mms_tab)
+    Cw_frame.place(relwidth=1, relheight=1/5, rely=4/5)
+
+    Cw_label = tk.Label(master=Cw_frame, text="Waiting customer in line cos Cw", bg=BASE_COL, foreground=TEXT_COL, font=45)
+    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
+    Cw_entry = tk.Entry(master=Cw_frame, font=45)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text="\tCost of keeping a single customer waiting in line. (can be left blank)", 
+    foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    Cw_description.place(relx=0, rely=0.3)
+
+    if Cs_entry.get() == "" and Cw_entry.get() == "":
+        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(Model.MMS, [s_entry.get(), l_entry.get(), m_entry.get(), Cs_entry.get(), Cw_entry.get()]))
+        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
+    else:
+        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(Model.MMS, [s_entry.get(), l_entry.get(), m_entry.get()]))
+        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
 
     parent_tab.add(mms_tab, text="M/M/s")
 

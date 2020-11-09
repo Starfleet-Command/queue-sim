@@ -42,7 +42,9 @@ def get_mmsk(lam, miu, s, k, cw=None, cs=None):
 
 	res["P\u2080"] = p0
 	res["P\u2096"] = pk
-	res["C\u2099"] = cn_less_s #TODO KHE
+	res["C\u2099, n<=s"] = cn_less_s
+	res["C\u2099, s<n<=k"] = cn_s_to_k
+	res["C\u2099, n>k"] = cn_more_k
 	res["\u03c1"] = rho
 	res["L"] = l
 	res["W"] = w
