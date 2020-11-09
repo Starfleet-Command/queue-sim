@@ -1,7 +1,7 @@
 import math
 
 
-def m_m_s_internal(lamda, miu, n, s):
+def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
     Cn = 0
     Pn = 0
     Sum_P0 = 0
@@ -16,8 +16,8 @@ def m_m_s_internal(lamda, miu, n, s):
         Cn = math.pow((lamda/miu), n)/(math.factorial(s)*math.pow(s, (n-s)))
 
     for sum_n in range(0, s):
-        print((math.pow((lamda/miu), sum_n)/math.factorial(n)))
-        Sum_P0 += (math.pow((lamda/miu), sum_n)/math.factorial(n))
+        print((math.pow((lamda/miu), sum_n)/math.factorial(sum_n)))
+        Sum_P0 += (math.pow((lamda/miu), sum_n)/math.factorial(sum_n))
         print(Sum_P0)
 
     P0 = 1/(Sum_P0 + (math.pow((lamda/miu), s)/math.factorial(s)) *
@@ -50,6 +50,7 @@ def m_m_s_internal(lamda, miu, n, s):
     print("W", W)
     print("Wq", Wq)
     print("Lq", Lq)
+    print("Ct", Ct)
 
     res = {}
     res["P\u2080"] = P0
@@ -60,13 +61,13 @@ def m_m_s_internal(lamda, miu, n, s):
     res["W"] = W
     res["Wq"] = Wq
     res["Lq"] = Lq
-
+    res["Ct"] = Ct
 
     return res
 
 
-def mms(lamda, miu, n, s):
-    result = m_m_s_internal(lamda, miu, n, s)
+def mms(lamda, miu, n, s, Cs=None, Cw=None):
+    result = m_m_s_internal(lamda, miu, n, s, Cs, Cw)
 
     return result
 
