@@ -40,6 +40,8 @@ def m_m_s_internal(lamda, miu, n, s):
 
     L = lamda*W
 
+    Ct = Lq*Cw+s*Cs
+
     print("P0", P0)
     print("Pn", Pn)
     print("Cn", Cn)
@@ -68,6 +70,7 @@ def mms(lamda, miu, n, s):
 
     return result
 
-#lambda, miu, n, s
-# resultado = mms(100, 60, 2, 2)
-# print(resultado)
+
+# lambda, miu, n, s
+resultado = mms(120.0, 80.0, 0.0, 3, 20, 48)
+print(resultado)
