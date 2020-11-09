@@ -40,7 +40,9 @@ def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
 
     L = lamda*W
 
-    Ct = Lq*Cw*s*Cs
+
+    Ct = Lq*Cw+s*Cs
+
 
     print("P0", P0)
     print("Pn", Pn)
