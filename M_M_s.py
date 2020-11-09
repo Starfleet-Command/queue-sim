@@ -1,7 +1,7 @@
 import math
 
 
-def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
+def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None, t=None):
     Cn = 0
     Pn = 0
     Sum_P0 = 0
@@ -40,9 +40,21 @@ def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
 
     L = lamda*W
 
+    if not Cs is None and not Cw is None:
+        Ct = L*Cw+s*Cs
+    else:
+        Ct = 0
 
-    Ct = Lq*Cw+s*Cs
+    if not t is None:
+        Wt = math.pow(math.e, -miu*t) * (1+(math.pow(s*rho, s)*P0*(1-math.pow(
+            math.e, -miu*t*(s-1-s*rho))))/(math.factorial(s)*(1-rho)*(s-1-s*rho)))
 
+        Wqt = ((math.pow(s*rho, s)*P0)/(math.factorial(s)*(1-rho))) * \
+            math.pow(math.e, -s*miu*t*(1-rho))
+
+    else:
+        Wt = 0.0
+        Wqt = 0.0
 
     print("P0", P0)
     print("Pn", Pn)
@@ -53,6 +65,8 @@ def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
     print("Wq", Wq)
     print("Lq", Lq)
     print("Ct", Ct)
+    print("Wt", Wt)
+    print("Wqt", Wqt)
 
     res = {}
     res["P\u2080"] = P0
@@ -64,16 +78,18 @@ def m_m_s_internal(lamda, miu, n, s, Cs=None, Cw=None):
     res["Wq"] = Wq
     res["Lq"] = Lq
     res["Ct"] = Ct
+    res["Wt"] = Wt
+    res["Wqt"] = Wqt
 
     return res
 
 
-def mms(lamda, miu, n, s, Cs=None, Cw=None):
-    result = m_m_s_internal(lamda, miu, n, s, Cs, Cw)
+def mms(lamda, miu, n, s, Cs=None, Cw=None, t=None):
+    result = m_m_s_internal(lamda, miu, n, s, Cs, Cw, t)
 
     return result
 
 
 # lambda, miu, n, s
-resultado = mms(120, 80, 0, 3, 20, 48)
+resultado = mms(120, 80, 0, 3, 20, 48, 0.05)
 print(resultado)
