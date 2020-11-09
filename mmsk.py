@@ -36,27 +36,37 @@ def get_mmsk(lam, miu, s, k):
 	w = wq + (1 / miu)
 	l = lam_e * w
 
-	#TODO regresar los valores en una lista como el M_M_s porfa
-	# tiene que ser [p0, Pn (o pk como esta aqui), Cn, rho, l, w, wq, lq]
+	res = {}
 
-	mmsk_list.append(str("%.4f" % round(p0, 4)))
-	mmsk_list.append(str("%.4f" % round(pk, 4)))
+	res["P\u2080"] = p0
+	res["P\u2096"] = pk
+	res["C\u2099"] = cn_less_s #TODO KHE
+	res["\u03c1"] = rho
+	res["L"] = l
+	res["W"] = w
+	res["Wq"] = wq
+	res["Lq"] = lq
 
-	mmsk_list.append(cn_less_s)
-	mmsk_list.append(cn_s_to_k)
-	mmsk_list.append(cn_more_k)
+	# mmsk_list.append(str("%.4f" % round(p0, 4)))
+	# mmsk_list.append(str("%.4f" % round(pk, 4)))
 
-	mmsk_list.append(pn_less_s)
-	mmsk_list.append(pn_s_to_k)
-	mmsk_list.append(pn_more_k)
+	# mmsk_list.append(cn_less_s)
+	# mmsk_list.append(cn_s_to_k)
+	# mmsk_list.append(cn_more_k)
 
-	mmsk_list.append(str("%.4f" % round(rho, 4)))
-	mmsk_list.append(str("%.4f" % round(l, 4)))
-	mmsk_list.append(str("%.4f" % round(w, 4)))
-	mmsk_list.append(str("%.4f" % round(wq, 4)))
-	mmsk_list.append(str("%.4f" % round(lq, 4)))
+	# mmsk_list.append(pn_less_s)
+	# mmsk_list.append(pn_s_to_k)
+	# mmsk_list.append(pn_more_k)
 
-	return mmsk_list
+	# mmsk_list.append(str("%.4f" % round(rho, 4)))
+	# mmsk_list.append(str("%.4f" % round(l, 4)))
+	# mmsk_list.append(str("%.4f" % round(w, 4)))
+	# mmsk_list.append(str("%.4f" % round(wq, 4)))
+	# mmsk_list.append(str("%.4f" % round(lq, 4)))
+
+	# return mmsk_list
+
+	return res
 
 mmsk = get_mmsk(2, 3, 1, 3)
 print(mmsk)

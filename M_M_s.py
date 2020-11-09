@@ -49,8 +49,18 @@ def m_m_s_internal(lamda, miu, n, s):
     print("Wq", Wq)
     print("Lq", Lq)
 
+    res = {}
+    res["P\u2080"] = P0
+    res["P\u2099"] = Pn
+    res["C\u2099"] = Cn
+    res["\u03C1"] = rho
+    res["L"] = L
+    res["W"] = W
+    res["Wq"] = Wq
+    res["Lq"] = Lq
 
-    return list([P0, Pn, Cn, rho, L, W, Wq, Lq])
+
+    return res
 
 
 def mms(lamda, miu, n, s):
