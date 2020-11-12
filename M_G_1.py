@@ -39,5 +39,5 @@ def get_m_g_1(lamda, miu, sigma, Cs=None, Cw=None, n=None):
 
     return res
 
-mg1 = get_m_g_1(3.0, 5.0, 1.0, 0.1)
-print(mg1)
+# mg1 = get_m_g_1(3.0, 5.0, 0.1)
+# print(mg1)

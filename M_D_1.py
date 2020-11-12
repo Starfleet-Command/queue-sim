@@ -41,5 +41,5 @@ def get_m_d_1(lamda, miu, Cs=None, Cw=None, n=None):
     return res
 
 
-md1 = get_m_d_1(3.0, 5.0)
-print(md1)
+# md1 = get_m_d_1(3.0, 5.0)
+# print(md1)

@@ -39,5 +39,5 @@ def get_m_ek_1(lamda, miu, k, Cs=None, Cw=None, n=None):
     return res
 
 
-# mek1 = get_m_ek_1(3.0, 5.0, 1.0, 4.0)
+# mek1 = get_m_ek_1(3.0, 5.0, 4.0)
 # print(mek1)
