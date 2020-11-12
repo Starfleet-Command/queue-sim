@@ -8,7 +8,6 @@ def get_m_ek_1(lamda, miu, n, k, Cs=None, Cw=None):
     Cn = -1
 
     Lq = ((1+k)/(2*k)) * ((math.pow(lamda, 2))/(miu*(miu-lamda)))
-    
     Wq = Lq/lamda
 
     W = Wq + 1/miu
