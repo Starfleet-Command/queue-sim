@@ -15,21 +15,17 @@ def get_mmsk(lam, miu, s, k, cw=None, cs=None, n=None):
 	p0 = 1 / (sum_1 + (mid * sum_2))
 	pk = (math.pow(lam / miu, k) / (math.factorial(s) * math.pow(s, k-1))) * p0
 
-	cn_less_s = "(" + str(lam) + "/" + str(miu) + ")^n/n!"
-	cn_s_to_k = "(" + str(lam) + "/" + str(miu) + ")^n/" + str(s) + "!" + str(s) + "^(n-" + str(s) + ")"
-	cn_more_k = str(0)
-
 	pn_less_s = "((" + str(lam) + "/" + str(miu) + ")^n/n!) * " + str(p0)
 	pn_s_to_k = "((" + str(lam) + "/" + str(miu) + ")^n/" + str(s) + "!" + str(s) + "^(n-" + str(s) + ")) * " + str(p0)
 	pn_more_k = str(0)
 
 	if(n):
 		if(n <= s):
-			cn = (math.pow(lam / miu, n) / math.factorial(n)) * p0
+			pn = (math.pow(lam / miu, n) / math.factorial(n)) * p0
 		elif(n <= k):
-			cn = (math.pow(lam / miu, n) / (math.factorial(s) * math.pow(s, n-s))) * p0
+			pn = (math.pow(lam / miu, n) / (math.factorial(s) * math.pow(s, n-s))) * p0
 		else:
-			cn = 0
+			pn = 0
 
 	rho = lam / (s * miu)
 
@@ -50,15 +46,13 @@ def get_mmsk(lam, miu, s, k, cw=None, cs=None, n=None):
 
 	res["P\u2080"] = round(p0, 4)
 	res["P\u2096"] = round(pk, 4)
-	res["C\u2099, n<=s"] = cn_less_s
-	res["C\u2099, s<n<=k"] = cn_s_to_k
-	res["C\u2099, n>k"] = cn_more_k
+
 	res["P\u2099, n<=s"] = pn_less_s
 	res["P\u2099, s<n<=k"] = pn_s_to_k
 	res["P\u2099, n>k"] = pn_more_k
 
 	if(n):
-		res["P" + str(n)] = round(cn, 4)
+		res["P" + str(n)] = round(pn, 4)
 
 	res["\u03c1"] = round(rho, 4)
 	res["L"] = round(l, 4)
