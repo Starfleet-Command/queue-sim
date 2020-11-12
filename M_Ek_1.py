@@ -1,11 +1,9 @@
 import math
 
-def get_m_ek_1(lamda, miu, n, k, Cs=None, Cw=None):
+def get_m_ek_1(lamda, miu, k, Cs=None, Cw=None, n=None):
     rho = lamda/miu
     P0 = 1 - rho
-    Pn = math.pow(rho, n) * P0
-
-    Cn = -1
+    pn = "((" + str(lamda) + "/" + str(miu) + ")^n/n!) * " + str(P0)
 
     Lq = ((1+k)/(2*k)) * ((math.pow(lamda, 2))/(miu*(miu-lamda)))
     
@@ -15,11 +13,30 @@ def get_m_ek_1(lamda, miu, n, k, Cs=None, Cw=None):
 
     L = lamda * W
 
+    res = {}
+
     if Cw and Cs:
-        Ct = Cw*Lq + Cs*1
-        return list([P0, Pn, Cn, rho, L, W, Lq, Wq, Ct])
-    else:
-        return list([P0, Pn, Cn, rho, L, W, Lq, Wq])
+        Ctlq = Cw*Lq + Cs*1
+        Ctl = Cw*L + Cs*1
+
+    res["P\u2080"] = round(P0, 4)
+    res["P\u2099, n"] = pn
+
+    if(n):
+        Pn = math.pow(rho, n) * P0
+        res["P" + str(n)] = round(Pn, 4)
+
+    res["\u03c1"] = round(rho, 4)
+    res["L"] = round(L, 4)
+    res["W"] = round(W, 4)
+    res["Wq"] = round(Wq, 4)
+    res["Lq"] = round(Lq, 4)
+
+    if(Cw and Cs):
+        res["Ct, with Lq"] = round(Ctlq, 2)
+        res["Ct, with L"] = round(Ctl, 2)
+
+    return res
 
 
 # mek1 = get_m_ek_1(3.0, 5.0, 1.0, 4.0)
