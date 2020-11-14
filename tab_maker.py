@@ -19,6 +19,19 @@ WIDTH = 1000
 # base vals
 BASE_COL = "#303030"
 TEXT_COL = "#dcdcdc"
+FONT_SIZE = 45
+
+# description text
+server_description = "\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost."
+lambda_description = "\tLambda denotes how many clients arrive at the system in a given time interval."
+miu_description = "\tMiu denotes the efficiency of a single server.\ni.e. How many clients can be satisfied by a server in a given time interval."
+server_cost_description = "\tCost of maintaining a single server over a time interval. (Can be left blank)"
+wait_cost_description = "\tCost of keeping a single customer waiting in line. (can be left blank)"
+n_pn_description = "\tn will provide Pn, or the probability that there will be n customers in the system. (defaults to 1)"
+given_t_decription = "\tt provides the probability that the customer will be waiting more than t units of time in the system"
+sigma_entry_description = "\tSigma"+u" \u03c3" + \
+    " Denotes the standard deviation of the distribution related to the arrival of customers."
+k_entry_description = "\tk is used in a M/M/s/k system to represent how many customers can be expected in a long time period.\nif k is indefinite, use M/M/s"
 
 
 class Model(Enum):
@@ -29,55 +42,59 @@ class Model(Enum):
     MMSK = 5
 
 
-def get_results(model, input_list):
+def get_results(model, input_dict):
     """
-    Receives the input list from the form
+    Receives the input dictionary from the gui form
     specifically:
     s - servers (or sigma) - nonexistent for M/D/1 and M/Ek/1
     l - lambda
     m - miu
+    n - prints out Pn, the probability of having n customers in the system
     k - (optional) expected customers
     sigma - (optional) std deviation
     """
     try:
-        if model != Model.MD1 or model != Model.MEK1:
-            s = int(input_list[0])
-            l = int(input_list[1])
-            m = int(input_list[2])
-        else:
-            l = int(input_list[0])
-            m = int(input_list[1])
-    except ValueError as verr:
-        messagebox.showerror("Error", verr)
-    else:
-        res = {}
-        if model == Model.MMS:
-            n = 1  # TODO unhardcode this
-            res = mms.mms(l, m, n, s, int(input_list[3]), int(input_list[4]))
-        elif model == Model.MMSK:
-            k = int(input_list[3])
-            n = input_list[4]
-            print(n)
-            if n != "":
-                n = int(n)
-            else:
-                n = 1
-            # TODO cw cs
-            res = mmsk.get_mmsk(l, m, s, k, n=n)
-        elif model == Model.MG1:
-            n = 1  # TODO unhardcode
-            res = mg1.get_m_g_1(l, m, n, s, int(
-                input_list[3]), int(input_list[4]))
-        elif model == Model.MD1:
-            n = 1
-            res = md1.get_m_d_1(l, m, n, int(
-                input_list[2], int(input_list[3])))
-        elif model == Model.MEK1:
-            n = 1
-            k = int(input_list[2])
-            res = mek1.get_m_ek_1(l, m, n, k, int(
-                input_list[3], int(input_list[4])))
+        se = int(input_dict['server_num'])
+        la = int(input_dict['lambda'])
+        mi = int(input_dict['miu'])
 
+        if input_dict['n'] == "n" or input_dict['n'] == "":
+            n = 1
+            messagebox.showinfo("Default value for n", "n will default to 1")
+        else:
+            n = int(input_dict['n'])
+
+        if input_dict['cs'] != "" and input_dict['cw'] != "":
+            cs = int(input_dict['cs'])
+            cw = int(input_dict['cw'])
+        else:
+            cs, cw = 0, 0
+            messagebox.showinfo("No Cs or Cw detected", "Cs and Cw will be equal to 0")
+
+        if model == Model.MMS:
+            t = int(input_dict['t'])
+        elif model == Model.MMSK:
+            k = int(input_dict['k'])
+        elif model == Model.MD1 or model == Model.MG1:
+            si = float(input_dict['sigma'])
+        elif model == Model.MEK1:
+            er = int(input_dict['erlang'])
+        error_raised = False
+    except ValueError as verr:
+        error_raised = True
+        messagebox.showerror("Error", verr)
+
+    if model == Model.MMS and not error_raised:
+        res = mms.mms(la, mi, se, Cs=cs, Cw=cw, t=t, n=n)
+    elif model == Model.MMSK and not error_raised:
+        res = mmsk.get_mmsk(la, mi, se, k, cw=cw, cs=cs, n=n)
+    elif model == Model.MG1 and not error_raised:
+        res = mg1.get_m_g_1(la, mi, si, Cs=cs, Cw=cw, n=n)
+    elif model == Model.MD1 and not error_raised:
+        res = md1.get_m_d_1(la, mi, Cs=cs, Cw=cw, n=n)
+    elif model == Model.MEK1 and not error_raised:
+        res = mek1.get_m_ek_1(la, mi, er, Cs=cs, Cw=cw, n=n)
+    if not error_raised:
         build_report_win(res)
 
 
@@ -88,7 +105,7 @@ def build_report_win(res):
     """
     res_win = tk.Tk()
     res_win.title("Results")
-    canvas = tk.Canvas(res_win, height=HEIGHT/2, width=WIDTH/2)
+    canvas = tk.Canvas(res_win, height=HEIGHT, width=WIDTH)
     canvas.pack()
     resframe = tk.Frame(master=res_win, bg=BASE_COL)
     resframe.place(relheight=1, relwidth=1)
@@ -96,458 +113,544 @@ def build_report_win(res):
     i = 0
 
     for key, value in res.items():
-        tk.Label(master=resframe, text=key, font=55, bg=BASE_COL, foreground=TEXT_COL).place(
+        tk.Label(master=resframe, text=key, font=FONT_SIZE+5, bg=BASE_COL, foreground=TEXT_COL).place(
             relwidth=0.1, relheight=1/num_res, rely=i/num_res)
-        tk.Label(master=resframe, text=str(value), font=55, bg=BASE_COL, foreground=TEXT_COL).place(
+        tk.Label(master=resframe, text=str(value), font=FONT_SIZE, bg=BASE_COL, foreground=TEXT_COL).place(
             relwidth=0.45, relheight=1/num_res, relx=0.15, rely=i/num_res)
         i += 1
 
 
-def make_mms_tab(parent_tab):
+def make_mms_tab(parent_tab, num_components):
+    all_rel_height = 1/num_components
+    this_frame = 1
     mms_tab = ttk.Frame(master=parent_tab, style='TFrame')
     # The number of servers
     s_frame = ttk.Frame(master=mms_tab)
-    s_frame.place(relwidth=1, relheight=1/5)
+    s_frame.place(relwidth=1, relheight=all_rel_height)
 
     s_label = ttk.Label(master=s_frame, text="Number of servers (s)",
-                        font=45, background=BASE_COL, foreground=TEXT_COL)
-    s_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    s_entry = tk.Entry(master=s_frame, font=45)
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    s_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    s_entry = tk.Entry(master=s_frame, font=FONT_SIZE)
     s_entry.insert(0, "1")
-    s_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    s_description = tk.Label(master=s_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             fg=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    s_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    s_description = tk.Label(master=s_frame, text=server_description,
+                             fg=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     s_description.place(relx=0, rely=0.3)
 
     # Lambda
     l_frame = ttk.Frame(master=mms_tab)
-    l_frame.place(relwidth=1, relheight=1/5, rely=1/5)
+    l_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of arrivals" +
-                        u" \u03bb", font=45, background=BASE_COL, foreground=TEXT_COL)
-    l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    l_entry = tk.Entry(master=l_frame, font=45)
+                        u" \u03bb", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    l_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    l_entry = tk.Entry(master=l_frame, font=FONT_SIZE)
     l_entry.insert(0, u"\u03bb")
-    l_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    l_description = tk.Label(master=l_frame, text="\tLambda denotes how many clients arrive at the system in a given time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    l_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    l_description = tk.Label(master=l_frame, text=lambda_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     l_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Miu
     m_frame = ttk.Frame(master=mms_tab)
-    m_frame.place(relwidth=1, relheight=1/5, rely=2/5)
+    m_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence" +
-                        u" \u03bc", font=45, background=BASE_COL, foreground=TEXT_COL)
-    m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    m_entry = tk.Entry(master=m_frame, font=45)
+                        u" \u03bc", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    m_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    m_entry = tk.Entry(master=m_frame, font=FONT_SIZE)
     m_entry.insert(0, u"\u03bc")
-    m_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    m_description = tk.Label(master=m_frame, text="\tMiu denotes the efficiency of a single server.\ni.e. How many clients can be satisfied by a server in a given time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    m_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    m_description = tk.Label(master=m_frame, text=miu_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     m_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    # Expoected customers k
+    # n probability
+    n_frame = ttk.Frame(master=mms_tab)
+    n_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
+
+    n_label = ttk.Label(master=n_frame, text="Given n",
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    n_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    n_entry = tk.Entry(master=n_frame, font=FONT_SIZE)
+    n_entry.insert(0, "n")
+    n_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    n_description = tk.Label(master=n_frame, text=n_pn_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
+    n_description.place(relx=0, rely=0.3)
+    this_frame += 1
+
+    # time t
+    t_frame = ttk.Frame(master=mms_tab)
+    t_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
+
+    t_label = ttk.Label(master=t_frame, text="Given t",
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    t_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    t_entry = tk.Entry(master=t_frame, font=FONT_SIZE)
+    t_entry.insert(0, "t")
+    t_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    t_description = tk.Label(master=t_frame, text=given_t_decription,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
+    t_description.place(relx=0, rely=0.3)
+    this_frame += 1
+
+    # Server cost Cs
     Cs_frame = ttk.Frame(master=mms_tab)
-    Cs_frame.place(relwidth=1, relheight=1/5, rely=3/5)
+    Cs_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cs_label = tk.Label(master=Cs_frame, text="Server cost C\u209b",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cs_entry = tk.Entry(master=Cs_frame, font=45)
-    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cs_description = tk.Label(master=Cs_frame, text="\tCost of maintaining a single server over a time interval. (Can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cs_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cs_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cost of waiting in line
     Cw_frame = ttk.Frame(master=mms_tab)
-    Cw_frame.place(relwidth=1, relheight=1/5, rely=4/5)
+    Cw_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cw_label = tk.Label(master=Cw_frame, text="Waiting customer in line cos Cw",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cw_entry = tk.Entry(master=Cw_frame, font=45)
-    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cw_description = tk.Label(master=Cw_frame, text="\tCost of keeping a single customer waiting in line. (can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cw_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cw_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    if Cs_entry.get() == "" and Cw_entry.get() == "":
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MMS, [s_entry.get(), l_entry.get(), m_entry.get(), Cs_entry.get(), Cw_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
-    else:
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MMS, [s_entry.get(), l_entry.get(), m_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
+    # which args to call
+    ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
+        Model.MMS, {'server_num':s_entry.get(), 'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(), 't':t_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
+    ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
 
     parent_tab.add(mms_tab, text="M/M/s")
 
 
-def make_mmsk_tab(parent_tab):
+def make_mmsk_tab(parent_tab, num_components):
+    all_rel_height = 1/num_components
+    this_frame = 1
     mmsk_tab = ttk.Frame(master=parent_tab, style='TFrame')
     # The number of servers
     s_frame = ttk.Frame(master=mmsk_tab)
-    s_frame.place(relwidth=1, relheight=1/7)
+    s_frame.place(relwidth=1, relheight=all_rel_height)
 
     s_label = ttk.Label(master=s_frame, text="Number of servers (s)",
-                        font=45, background=BASE_COL, foreground=TEXT_COL)
-    s_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    s_entry = tk.Entry(master=s_frame, font=45)
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    s_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    s_entry = tk.Entry(master=s_frame, font=FONT_SIZE)
     s_entry.insert(0, "1")
-    s_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    s_description = tk.Label(master=s_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             fg=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    s_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    s_description = tk.Label(master=s_frame, text=server_cost_description,
+                             fg=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     s_description.place(relx=0, rely=0.3)
 
     # Lambda
     l_frame = ttk.Frame(master=mmsk_tab)
-    l_frame.place(relwidth=1, relheight=1/7, rely=1/7)
+    l_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of service" +
-                        u" \u03bb", font=40, background=BASE_COL, foreground=TEXT_COL)
-    l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    l_entry = tk.Entry(master=l_frame, font=40)
+                        u" \u03bb", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    l_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    l_entry = tk.Entry(master=l_frame, font=FONT_SIZE)
     l_entry.insert(0, u"\u03bb")
-    l_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    l_description = tk.Label(master=l_frame, text="\tLambda denotes how many clients arrive at the system in a given time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    l_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    l_description = tk.Label(master=l_frame, text=lambda_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     l_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Miu
     m_frame = ttk.Frame(master=mmsk_tab)
-    m_frame.place(relwidth=1, relheight=1/7, rely=2/7)
+    m_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence" +
-                        u" \u03bc", font=40, background=BASE_COL, foreground=TEXT_COL)
-    m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    m_entry = tk.Entry(master=m_frame, font=40)
+                        u" \u03bc", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    m_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    m_entry = tk.Entry(master=m_frame, font=FONT_SIZE)
     m_entry.insert(0, u"\u03bc")
-    m_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    m_description = tk.Label(master=m_frame, text="\tMiu denotes the efficiency of a single server.\ni.e. How many clients can be satisfied by a server in a given time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    m_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    m_description = tk.Label(master=m_frame, text=miu_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     m_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # n probability
     n_frame = ttk.Frame(master=mmsk_tab)
-    n_frame.place(relwidth=1, relheight=1/7, rely=3/7)
+    n_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     n_label = ttk.Label(master=n_frame, text="Given n",
-                        font=40, background=BASE_COL, foreground=TEXT_COL)
-    n_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    n_entry = tk.Entry(master=n_frame, font=40)
-    n_entry.insert(0, u"\u03bc")
-    n_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    n_description = tk.Label(master=n_frame, text="\tn will provide Pn, i.e. the probability that there will be n customers in the system.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    n_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    n_entry = tk.Entry(master=n_frame, font=FONT_SIZE)
+    n_entry.insert(0, "n")
+    n_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    n_description = tk.Label(master=n_frame, text=n_pn_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     n_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cs
     Cs_frame = ttk.Frame(master=mmsk_tab)
-    Cs_frame.place(relwidth=1, relheight=1/7, rely=4/7)
+    Cs_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
-    Cs_label = ttk.Label(master=Cs_frame, text="Cs",
-                         font=40, background=BASE_COL, foreground=TEXT_COL)
-    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    Cs_entry = tk.Entry(master=Cs_frame, font=40)
+    Cs_label = ttk.Label(master=Cs_frame, text="Server cost C\u209b",
+                         font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    Cs_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
     Cs_entry.insert(0, u"\u03bc")
-    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cs_description = tk.Label(master=Cs_frame, text="\tCost of a signle server",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cs_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cw
     Cw_frame = ttk.Frame(master=mmsk_tab)
-    Cw_frame.place(relwidth=1, relheight=1/7, rely=5/7)
+    Cw_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cw_label = ttk.Label(master=Cw_frame, text="Cw",
-                         font=40, background=BASE_COL, foreground=TEXT_COL)
-    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    Cw_entry = tk.Entry(master=Cw_frame, font=40)
+                         font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    Cw_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
     Cw_entry.insert(0, u"\u03bc")
-    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cw_description = tk.Label(master=Cw_frame, text="\tThe cost of keeping a single customer waiting in line.",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cw_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Expoected customers k
     k_frame = ttk.Frame(master=mmsk_tab)
-    k_frame.place(relwidth=1, relheight=1/7, rely=6/7)
+    k_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     k_label = tk.Label(master=k_frame, text="Number of expected customers",
-                       bg=BASE_COL, foreground=TEXT_COL, font=40)
-    k_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    k_entry = tk.Entry(master=k_frame, font=40)
+                       bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    k_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    k_entry = tk.Entry(master=k_frame, font=FONT_SIZE)
     k_entry.insert(0, "k")
-    k_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    k_description = tk.Label(master=k_frame, text="\tk allows to know how many customers to expect into the system.\nIf not applicable, use the M/M/s tab.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=40)
+    k_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    k_description = tk.Label(master=k_frame, text=k_entry_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     k_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    ok_btn = tk.Button(master=k_frame, text="OK", anchor="c", command=lambda: get_results(
-        Model.MMSK, [s_entry.get(), l_entry.get(), m_entry.get(), k_entry.get(), n_entry.get()]))
+    ok_btn = tk.Button(master=k_frame, text="OK", anchor="c", command=lambda: get_results(Model.MMSK, {'server_num':s_entry.get(), 'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get(), 'k':k_entry.get()}))
     ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
+
     parent_tab.add(mmsk_tab, text="M/M/s/k")
 
 
-def make_mg1_tab(parent_tab):
+def make_mg1_tab(parent_tab, num_components):
+    all_rel_height = 1/num_components
+    this_frame = 1
     mg1_tab = ttk.Frame(master=parent_tab, style='TFrame')
     # Std deviation
     sigma_frame = ttk.Frame(master=mg1_tab)
-    sigma_frame.place(relwidth=1, relheight=1/5)
+    sigma_frame.place(relwidth=1, relheight=all_rel_height)
 
     sigma_label = ttk.Label(master=sigma_frame, text="Sigma" +
-                            u" \u03c3", font=45, background=BASE_COL, foreground=TEXT_COL)
-    sigma_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    sigma_entry = tk.Entry(master=sigma_frame, font=45)
+                            u" \u03c3", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    sigma_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    sigma_entry = tk.Entry(master=sigma_frame, font=FONT_SIZE)
     sigma_entry.insert(0, "1")
-    sigma_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    sigma_description = tk.Label(master=sigma_frame, text="\tSigma"+u" \u03c3"+" Denotes the standard deviation of the distribution related to the arrival of customers.",
-                                 fg=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    sigma_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    sigma_description = tk.Label(master=sigma_frame, text=sigma_entry_description,
+                                 fg=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     sigma_description.place(relx=0, rely=0.3)
 
     # Lambda
     l_frame = ttk.Frame(master=mg1_tab)
-    l_frame.place(relwidth=1, relheight=1/5, rely=1/5)
+    l_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of service" +
-                        u" \u03bb", font=45, background=BASE_COL, foreground=TEXT_COL)
-    l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    l_entry = tk.Entry(master=l_frame, font=45)
+                        u" \u03bb", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    l_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    l_entry = tk.Entry(master=l_frame, font=FONT_SIZE)
     l_entry.insert(0, u"\u03bb")
-    l_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    l_description = tk.Label(master=l_frame, text="\tLambda denotes the efficiency of a single server in a time interval.\ni.e. How many customers can it satisfy in said time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    l_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    l_description = tk.Label(master=l_frame, text=lambda_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     l_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Miu
     m_frame = ttk.Frame(master=mg1_tab)
-    m_frame.place(relwidth=1, relheight=1/5, rely=2/5)
+    m_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence" +
-                        u" \u03bc", font=45, background=BASE_COL, foreground=TEXT_COL)
-    m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    m_entry = tk.Entry(master=m_frame, font=45)
+                        u" \u03bc", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    m_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    m_entry = tk.Entry(master=m_frame, font=FONT_SIZE)
     m_entry.insert(0, u"\u03bc")
-    m_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    m_description = tk.Label(master=m_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    m_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    m_description = tk.Label(master=m_frame, text=miu_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     m_description.place(relx=0, rely=0.3)
+    this_frame += 1
+
+    # Miu
+    n_frame = ttk.Frame(master=mg1_tab)
+    n_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
+
+    n_label = ttk.Label(master=n_frame, text="Given n",
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    n_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    n_entry = tk.Entry(master=n_frame, font=FONT_SIZE)
+    n_entry.insert(0, "n")
+    n_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    n_description = tk.Label(master=n_frame, text=n_pn_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
+    n_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Expoected customers k
     Cs_frame = ttk.Frame(master=mg1_tab)
-    Cs_frame.place(relwidth=1, relheight=1/5, rely=3/5)
+    Cs_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cs_label = tk.Label(master=Cs_frame, text="Server cost C\u209b",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cs_entry = tk.Entry(master=Cs_frame, font=45)
-    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cs_description = tk.Label(master=Cs_frame, text="\tCost of maintaining a single server over a time interval. (Can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cs_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cs_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cost of waiting in line
     Cw_frame = ttk.Frame(master=mg1_tab)
-    Cw_frame.place(relwidth=1, relheight=1/5, rely=4/5)
+    Cw_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cw_label = tk.Label(master=Cw_frame, text="Waiting customer in line cos Cw",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cw_entry = tk.Entry(master=Cw_frame, font=45)
-    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cw_description = tk.Label(master=Cw_frame, text="\tCost of keeping a single customer waiting in line. (can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cw_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cw_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    if Cs_entry.get() == "" or Cw_entry.get() == "":
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MG1, [sigma_entry.get(), l_entry.get(), m_entry.get(), Cs_entry.get(), Cw_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
-    else:
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MG1, [sigma_entry.get(), l_entry.get(), m_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
+    ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
+        Model.MG1, {'sigma':sigma_entry.get(), 'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
+
+    ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
 
     parent_tab.add(mg1_tab, text="M/G/1")
 
 
-def make_md1_tab(parent_tab):
+def make_md1_tab(parent_tab, num_components):
+    all_rel_height = 1/num_components
+    this_frame = 1
     md1_tab = ttk.Frame(master=parent_tab, style='TFrame')
-
-    # Std deviation
-    sigma_frame = ttk.Frame(master=md1_tab)
-    sigma_frame.place(relwidth=1, relheight=1/5)
-
-    sigma_label = ttk.Label(master=sigma_frame, text="Sigma" +
-                            u" \u03c3", font=45, background=BASE_COL, foreground=TEXT_COL)
-    sigma_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    sigma_entry = tk.Entry(master=sigma_frame, font=45)
-    sigma_entry.insert(0, "1")
-    sigma_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    sigma_description = tk.Label(master=sigma_frame, text="\tSigma"+u" \u03c3"+" Denotes the standard deviation of the distribution related to the arrival of customers.",
-                                 fg=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
-    sigma_description.place(relx=0, rely=0.3)
 
     # Lambda
     l_frame = ttk.Frame(master=md1_tab)
-    l_frame.place(relwidth=1, relheight=1/5, rely=1/5)
+    l_frame.place(relwidth=1, relheight=all_rel_height)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of service" +
-                        u" \u03bb", font=45, background=BASE_COL, foreground=TEXT_COL)
-    l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    l_entry = tk.Entry(master=l_frame, font=45)
+                        u" \u03bb", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    l_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    l_entry = tk.Entry(master=l_frame, font=FONT_SIZE)
     l_entry.insert(0, u"\u03bb")
-    l_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    l_description = tk.Label(master=l_frame, text="\tLambda denotes the efficiency of a single server in a time interval.\ni.e. How many customers can it satisfy in said time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    l_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    l_description = tk.Label(master=l_frame, text=lambda_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     l_description.place(relx=0, rely=0.3)
 
     # Miu
     m_frame = ttk.Frame(master=md1_tab)
-    m_frame.place(relwidth=1, relheight=1/5, rely=2/5)
+    m_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence" +
-                        u" \u03bc", font=45, background=BASE_COL, foreground=TEXT_COL)
-    m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    m_entry = tk.Entry(master=m_frame, font=45)
+                        u" \u03bc", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    m_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    m_entry = tk.Entry(master=m_frame, font=FONT_SIZE)
     m_entry.insert(0, u"\u03bc")
-    m_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    m_description = tk.Label(master=m_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    m_entry.place(relx=0.3, rely=0.05, relheight=0.2, relwidth=0.25)
+    m_description = tk.Label(master=m_frame, text=miu_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     m_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    # Expoected customers k
+    # Given n
+    n_frame = ttk.Frame(master=md1_tab)
+    n_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
+
+    n_label = ttk.Label(master=n_frame, text="Given n",
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    n_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    n_entry = tk.Entry(master=n_frame, font=FONT_SIZE)
+    n_entry.insert(0, "n")
+    n_entry.place(relx=0.3, rely=0.05, relheight=0.2, relwidth=0.25)
+    n_description = tk.Label(master=n_frame, text=n_pn_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
+    n_description.place(relx=0, rely=0.3)
+    this_frame += 1
+
+    # Server cost Cs
     Cs_frame = ttk.Frame(master=md1_tab)
-    Cs_frame.place(relwidth=1, relheight=1/5, rely=3/5)
+    Cs_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cs_label = tk.Label(master=Cs_frame, text="Server cost C\u209b",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cs_entry = tk.Entry(master=Cs_frame, font=45)
-    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cs_description = tk.Label(master=Cs_frame, text="\tCost of maintaining a single server over a time interval. (Can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cs_label.place(relx=0, rely=0, relheight=0.2, relwidth=0.3)
+    Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.2, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cs_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cost of waiting in line
     Cw_frame = ttk.Frame(master=md1_tab)
-    Cw_frame.place(relwidth=1, relheight=1/5, rely=4/5)
+    Cw_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cw_label = tk.Label(master=Cw_frame, text="Waiting customer in line cos Cw",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cw_entry = tk.Entry(master=Cw_frame, font=45)
-    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cw_description = tk.Label(master=Cw_frame, text="\tCost of keeping a single customer waiting in line. (can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cw_label.place(relx=0, rely=0, relheight=0.2, relwidth=0.3)
+    Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.2, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cw_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    if Cs_entry.get() == "" and Cw_entry.get() == "":
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MD1, [sigma_entry.get(), l_entry.get(), m_entry.get(), Cs_entry.get(), Cw_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
-    else:
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MD1, [sigma_entry.get(), l_entry.get(), m_entry.get()]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
+    ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
+        Model.MD1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
 
+    ok_btn.place(relx=0.40, rely=0.65, relheight=0.2, relwidth=0.2)
     parent_tab.add(md1_tab, text="M/D/1")
 
 
-def make_mek1_tab(parent_tab):
+def make_mek1_tab(parent_tab, num_components):
+    all_rel_height = 1/num_components
+    this_frame = 1
     mek1_tab = ttk.Frame(master=parent_tab, style='TFrame')
 
     # Lambda
     l_frame = ttk.Frame(master=mek1_tab)
-    l_frame.place(relwidth=1, relheight=1/6)
+    l_frame.place(relwidth=1, relheight=all_rel_height)
 
     l_label = ttk.Label(master=l_frame, text="Frequence of service" +
-                        u" \u03bb", font=45, background=BASE_COL, foreground=TEXT_COL)
-    l_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    l_entry = tk.Entry(master=l_frame, font=45)
+                        u" \u03bb", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    l_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    l_entry = tk.Entry(master=l_frame, font=FONT_SIZE)
     l_entry.insert(0, u"\u03bb")
-    l_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    l_description = tk.Label(master=l_frame, text="\tLambda denotes the efficiency of a single server in a time interval.\ni.e. How many customers can it satisfy in said time interval.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    l_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    l_description = tk.Label(master=l_frame, text=lambda_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     l_description.place(relx=0, rely=0.3)
 
     # Miu
     m_frame = ttk.Frame(master=mek1_tab)
-    m_frame.place(relwidth=1, relheight=1/6, rely=1/6)
+    m_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     m_label = ttk.Label(master=m_frame, text="Service frequence" +
-                        u" \u03bc", font=45, background=BASE_COL, foreground=TEXT_COL)
-    m_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    m_entry = tk.Entry(master=m_frame, font=45)
+                        u" \u03bc", font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    m_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    m_entry = tk.Entry(master=m_frame, font=FONT_SIZE)
     m_entry.insert(0, u"\u03bc")
-    m_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    m_description = tk.Label(master=m_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    m_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    m_description = tk.Label(master=m_frame, text=miu_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     m_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # n
     n_frame = ttk.Frame(master=mek1_tab)
-    n_frame.place(relwidth=1, relheight=1/6, rely=2/6)
+    n_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     n_label = ttk.Label(master=n_frame, text="n customers",
-                        font=45, background=BASE_COL, foreground=TEXT_COL)
-    n_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    n_entry = tk.Entry(master=n_frame, font=45)
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    n_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    n_entry = tk.Entry(master=n_frame, font=FONT_SIZE)
     n_entry.insert(0, "n")
-    n_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    n_description = tk.Label(master=n_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    n_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    n_description = tk.Label(master=n_frame, text=n_pn_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     n_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Erlang degree k
     k_frame = ttk.Frame(master=mek1_tab)
-    k_frame.place(relwidth=1, relheight=1/6, rely=3/6)
+    k_frame.place(relwidth=1, relheight=all_rel_height,
+                  rely=this_frame/num_components)
 
     k_label = ttk.Label(master=k_frame, text="Erlang degree",
-                        font=45, background=BASE_COL, foreground=TEXT_COL)
-    k_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.25)
-    k_entry = tk.Entry(master=k_frame, font=45)
+                        font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
+    k_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
+    k_entry = tk.Entry(master=k_frame, font=FONT_SIZE)
     k_entry.insert(0, "k")
-    k_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    k_description = tk.Label(master=k_frame, text="\tThe number of servers denotes how many clients can be dealt with simultaneously.\nAugmenting servers can affect cost.",
-                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+    k_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    k_description = tk.Label(master=k_frame, text=k_entry_description,
+                             foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     k_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Expoected customers k
     Cs_frame = ttk.Frame(master=mek1_tab)
-    Cs_frame.place(relwidth=1, relheight=1/6, rely=4/6)
+    Cs_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cs_label = tk.Label(master=Cs_frame, text="Server cost C\u209b",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cs_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cs_entry = tk.Entry(master=Cs_frame, font=45)
-    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cs_description = tk.Label(master=Cs_frame, text="\tCost of maintaining a single server over a time interval. (Can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cs_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
+    Cs_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cs_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
     # Cost of waiting in line
     Cw_frame = ttk.Frame(master=mek1_tab)
-    Cw_frame.place(relwidth=1, relheight=1/6, rely=5/6)
+    Cw_frame.place(relwidth=1, relheight=all_rel_height,
+                   rely=this_frame/num_components)
 
     Cw_label = tk.Label(master=Cw_frame, text="Waiting customer in line cos Cw",
-                        bg=BASE_COL, foreground=TEXT_COL, font=45)
-    Cw_label.place(relx=0, rely=0, relheight=0.15, relwidth=0.3)
-    Cw_entry = tk.Entry(master=Cw_frame, font=45)
-    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.1, relwidth=0.25)
-    Cw_description = tk.Label(master=Cw_frame, text="\tCost of keeping a single customer waiting in line. (can be left blank)",
-                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=50)
+                        bg=BASE_COL, foreground=TEXT_COL, font=FONT_SIZE)
+    Cw_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.3)
+    Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
+    Cw_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
+    Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
+                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     Cw_description.place(relx=0, rely=0.3)
+    this_frame += 1
 
-    if Cs_entry.get() == "" and Cw_entry.get() == "":
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MEK1, [l_entry, m_entry, n_entry, k_entry, Cs_entry, Cw_entry]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
-    else:
-        ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-            Model.MEK1, [l_entry, m_entry, n_entry, k_entry]))
-        ok_btn.place(relx=0.40, rely=0.65, relheight=0.1, relwidth=0.2)
+    ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
+        Model.MEK1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'er':k_entry, 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
 
+    ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
     parent_tab.add(mek1_tab, text="M/Ek/1")
