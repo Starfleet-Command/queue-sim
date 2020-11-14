@@ -54,9 +54,10 @@ def get_results(model, input_dict):
     sigma - (optional) std deviation
     """
     try:
-        se = int(input_dict['server_num'])
         la = int(input_dict['lambda'])
         mi = int(input_dict['miu'])
+        if model not in (Model.MG1, Model.MD1, Model.MEK1):
+            se = int(input_dict['server_num'])
 
         if input_dict['n'] == "n" or input_dict['n'] == "":
             n = 1
@@ -105,7 +106,7 @@ def build_report_win(res):
     """
     res_win = tk.Tk()
     res_win.title("Results")
-    canvas = tk.Canvas(res_win, height=HEIGHT, width=WIDTH)
+    canvas = tk.Canvas(res_win, height=HEIGHT, width=WIDTH*0.75)
     canvas.pack()
     resframe = tk.Frame(master=res_win, bg=BASE_COL)
     resframe.place(relheight=1, relwidth=1)
@@ -114,7 +115,7 @@ def build_report_win(res):
 
     for key, value in res.items():
         tk.Label(master=resframe, text=key, font=FONT_SIZE+5, bg=BASE_COL, foreground=TEXT_COL).place(
-            relwidth=0.1, relheight=1/num_res, rely=i/num_res)
+            relwidth=0.15, relheight=1/num_res, rely=i/num_res)
         tk.Label(master=resframe, text=str(value), font=FONT_SIZE, bg=BASE_COL, foreground=TEXT_COL).place(
             relwidth=0.45, relheight=1/num_res, relx=0.15, rely=i/num_res)
         i += 1
