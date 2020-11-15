@@ -1,7 +1,10 @@
 import math
 
+
 def get_m_ek_1(lamda, miu, k, Cs=None, Cw=None, n=None):
     rho = lamda/miu
+    if rho >= 1:
+        return -1
     P0 = 1 - rho
     pn = "((" + str(lamda) + "/" + str(miu) + ")^n/n!) * " + str(P0)
 

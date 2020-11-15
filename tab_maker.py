@@ -41,8 +41,8 @@ class Model(Enum):
     MMS = 4
     MMSK = 5
 
-def neg_value_error(val):
-    messagebox.showerror("Error", val+" cannot be a negative number.")
+def invalid_value_error(val):
+    messagebox.showerror("Error", "Invalid value for " + val)
 
 def get_results(model, input_dict):
     """
@@ -61,18 +61,19 @@ def get_results(model, input_dict):
         if int(input_dict['lambda'])>=1:
             la = int(input_dict['lambda'])
         else:
-            neg_value_error(u"\u03bb")
+            invalid_value_error(u"\u03bb")
             error_raised = True
         if int(input_dict['miu'])>=1:
             mi = int(input_dict['miu'])
         else:
-            neg_value_error(u"\u03bc")
+            invalid_value_error(u"\u03bc")
             error_raised = True
-        if model not in (Model.MG1, Model.MD1, Model.MEK1) and int(input_dict['server_num'])>=1:
-            se = int(input_dict['server_num'])
-        else:
-            error_raised = True
-            neg_value_error("The number of servers")
+        if model not in (Model.MG1, Model.MD1, Model.MEK1):
+            if int(input_dict['server_num'])>=1:
+                se = int(input_dict['server_num'])
+            else:
+                error_raised = True
+                invalid_value_error("The number of servers")
 
         if input_dict['n'] == "n" or input_dict['n'] == "":
             n = 0
@@ -81,12 +82,12 @@ def get_results(model, input_dict):
             if int(input_dict['n'])>=0:
                 n = int(input_dict['n'])
             else:
-                neg_value_error("n")
+                invalid_value_error("n")
                 error_raised = True
 
         if input_dict['cs'] != "" and input_dict['cw'] != "":
             if int(input_dict['cs'])<0 or int(input_dict['cw'])<0:
-                neg_value_error("Cs or Cw")
+                invalid_value_error("Cs or Cw")
                 error_raised = True
             else:
                 cs = int(input_dict['cs'])
@@ -100,25 +101,25 @@ def get_results(model, input_dict):
             if int(input_dict['t'])>=0:
                 t = float(input_dict['t'])
             else:
-                neg_value_error("t")
+                invalid_value_error("t")
                 error_raised = True
         elif model == Model.MMSK:
             if int(input_dict['k'])>=0:
                 k = int(input_dict['k'])
             else:
-                neg_value_error("k")
+                invalid_value_error("k")
                 error_raised = True
         elif model == Model.MG1:
             if float(input_dict['sigma'])>=0:
                 si = float(input_dict['sigma'])
             else:
-                neg_value_error(u"\u03c3")
+                invalid_value_error(u"\u03c3")
                 error_raised = True
         elif model == Model.MEK1:
             if int(input_dict['erlang'])>=1:
                 er = int(input_dict['erlang'])
             else:
-                neg_value_error("k (Erlang)")
+                invalid_value_error("k (Erlang)")
                 error_raised = True
     except ValueError as verr:
         error_raised = True

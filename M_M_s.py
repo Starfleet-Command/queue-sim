@@ -5,8 +5,9 @@ def m_m_s_internal(lamda, miu, s, Cs=None, Cw=None, t=None, n=None):
     Cn = 0
     Pn = 0
     Sum_P0 = 0
+    rho = lamda/(s*miu)
 
-    if lamda/(s*miu) > 1:
+    if rho >= 1:
         return -1
 
     for sum_n in range(0, s):
@@ -35,8 +36,6 @@ def m_m_s_internal(lamda, miu, s, Cs=None, Cw=None, t=None, n=None):
     else:
         Cn = 0
         Pn = 0
-
-    rho = lamda/(s*miu)
 
     Lq = (P0*math.pow((lamda/miu), s)*rho) / \
         (math.factorial(s)*math.pow((1-rho), 2))

@@ -1,12 +1,15 @@
 import math
 
+
 def get_m_g_1(lamda, miu, sigma, Cs=None, Cw=None, n=None):
     rho = lamda/miu
+    if rho >= 1:
+        return -1
     P0 = 1 - rho
     pn = "((" + str(lamda) + "/" + str(miu) + ")^n/n!) * " + str(P0)
-    
 
-    Lq = ((math.pow(lamda, 2) * math.pow(sigma, 2)) + math.pow(rho, 2))/(2*(1-rho))
+    Lq = ((math.pow(lamda, 2) * math.pow(sigma, 2)) +
+          math.pow(rho, 2))/(2*(1-rho))
 
     L = rho + Lq
 

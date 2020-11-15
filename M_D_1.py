@@ -3,6 +3,8 @@ import math
 
 def get_m_d_1(lamda, miu, Cs=None, Cw=None, n=None):
     rho = lamda/miu
+    if rho >= 1:
+        return -1
     P0 = 1 - rho
     pn = "((" + str(lamda) + "/" + str(miu) + ")^n/n!) * " + str(P0)
 
@@ -22,7 +24,6 @@ def get_m_d_1(lamda, miu, Cs=None, Cw=None, n=None):
 
     res["P\u2080"] = round(P0, 4)
     res["P\u2099, n"] = pn
-
 
     if(n):
         Pn = math.pow(rho, n) * P0
