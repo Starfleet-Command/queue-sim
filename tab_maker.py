@@ -27,7 +27,7 @@ lambda_description = "\tLambda denotes how many clients arrive at the system in 
 miu_description = "\tMiu denotes the efficiency of a single server.\ni.e. How many clients can be satisfied by a server in a given time interval."
 server_cost_description = "\tCost of maintaining a single server over a time interval. (Can be left blank)"
 wait_cost_description = "\tCost of keeping a single customer waiting in line. (can be left blank)"
-n_pn_description = "\tn will provide Pn, or the probability that there will be n customers in the system. (defaults to 1)"
+n_pn_description = "\tn will provide Pn, or the probability that there will be n customers in the system. (defaults to 0)"
 given_t_decription = "\tt provides the probability that the customer will be waiting more than t units of time in the system"
 sigma_entry_description = "\tSigma"+u" \u03c3" + \
     " Denotes the standard deviation of the distribution related to the arrival of customers."
@@ -41,46 +41,85 @@ class Model(Enum):
     MMS = 4
     MMSK = 5
 
+def neg_value_error(val):
+    messagebox.showerror("Error", val+" cannot be a negative number.")
 
 def get_results(model, input_dict):
     """
     Receives the input dictionary from the gui form
-    specifically:
-    s - servers (or sigma) - nonexistent for M/D/1 and M/Ek/1
-    l - lambda
-    m - miu
+    specifically, the keys are:
+    servers - nonexistent for M/D/1 and M/Ek/1
+    lambda - lambda
+    miu - miu
     n - prints out Pn, the probability of having n customers in the system
-    k - (optional) expected customers
-    sigma - (optional) std deviation
+    k - expected customers (only applicable in M/M/s/k)
+    sigma - std deviation (only applicable in M/D/1 and M/G/1)
+    erlang - k erlang degree (M/Ek/1 only)
     """
     try:
-        la = int(input_dict['lambda'])
-        mi = int(input_dict['miu'])
-        if model not in (Model.MG1, Model.MD1, Model.MEK1):
+        error_raised = False
+        if int(input_dict['lambda'])>=1:
+            la = int(input_dict['lambda'])
+        else:
+            neg_value_error(u"\u03bb")
+            error_raised = True
+        if int(input_dict['miu'])>=1:
+            mi = int(input_dict['miu'])
+        else:
+            neg_value_error(u"\u03bc")
+            error_raised = True
+        if model not in (Model.MG1, Model.MD1, Model.MEK1) and int(input_dict['server_num'])>=1:
             se = int(input_dict['server_num'])
+        else:
+            error_raised = True
+            neg_value_error("The number of servers")
 
         if input_dict['n'] == "n" or input_dict['n'] == "":
-            n = 1
-            messagebox.showinfo("Default value for n", "n will default to 1")
+            n = 0
+            messagebox.showinfo("Default value for n", "n will default to 0")
         else:
-            n = int(input_dict['n'])
+            if int(input_dict['n'])>=0:
+                n = int(input_dict['n'])
+            else:
+                neg_value_error("n")
+                error_raised = True
 
         if input_dict['cs'] != "" and input_dict['cw'] != "":
-            cs = int(input_dict['cs'])
-            cw = int(input_dict['cw'])
+            if int(input_dict['cs'])<0 or int(input_dict['cw'])<0:
+                neg_value_error("Cs or Cw")
+                error_raised = True
+            else:
+                cs = int(input_dict['cs'])
+                cw = int(input_dict['cw'])
+
         else:
             cs, cw = 0, 0
             messagebox.showinfo("No Cs or Cw detected", "Cs and Cw will be equal to 0")
 
         if model == Model.MMS:
-            t = int(input_dict['t'])
+            if int(input_dict['t'])>=0:
+                t = float(input_dict['t'])
+            else:
+                neg_value_error("t")
+                error_raised = True
         elif model == Model.MMSK:
-            k = int(input_dict['k'])
-        elif model == Model.MD1 or model == Model.MG1:
-            si = float(input_dict['sigma'])
+            if int(input_dict['k'])>=0:
+                k = int(input_dict['k'])
+            else:
+                neg_value_error("k")
+                error_raised = True
+        elif model == Model.MG1:
+            if float(input_dict['sigma'])>=0:
+                si = float(input_dict['sigma'])
+            else:
+                neg_value_error(u"\u03c3")
+                error_raised = True
         elif model == Model.MEK1:
-            er = int(input_dict['erlang'])
-        error_raised = False
+            if int(input_dict['erlang'])>=1:
+                er = int(input_dict['erlang'])
+            else:
+                neg_value_error("k (Erlang)")
+                error_raised = True
     except ValueError as verr:
         error_raised = True
         messagebox.showerror("Error", verr)
@@ -96,7 +135,11 @@ def get_results(model, input_dict):
     elif model == Model.MEK1 and not error_raised:
         res = mek1.get_m_ek_1(la, mi, er, Cs=cs, Cw=cw, n=n)
     if not error_raised:
-        build_report_win(res)
+        if isinstance(res, dict):
+            build_report_win(res)
+        else:
+            messagebox.showwarning("Warning", "Unstable system i.e. you bit more than you can chew.\nHint: Check lambda, miu and number of servers.")
+
 
 
 def build_report_win(res):
@@ -411,7 +454,7 @@ def make_mg1_tab(parent_tab, num_components):
     m_description.place(relx=0, rely=0.3)
     this_frame += 1
 
-    # Miu
+    # Given n 
     n_frame = ttk.Frame(master=mg1_tab)
     n_frame.place(relwidth=1, relheight=all_rel_height,
                   rely=this_frame/num_components)
@@ -651,7 +694,7 @@ def make_mek1_tab(parent_tab, num_components):
     this_frame += 1
 
     ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-        Model.MEK1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'er':k_entry, 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
+        Model.MEK1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(),'erlang':k_entry, 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
 
     ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
     parent_tab.add(mek1_tab, text="M/Ek/1")

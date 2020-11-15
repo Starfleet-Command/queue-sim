@@ -1,3 +1,7 @@
+"""
+Main file for the gui.
+"""
+
 import tkinter as tk
 from tkinter import ttk
 import tab_maker as tm
