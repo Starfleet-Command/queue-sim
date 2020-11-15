@@ -26,5 +26,5 @@ def get_m_m_1 (lamda, miu, n, Cs=None, Cw=None):
         
         return list([P0, Pn, Cn, rho, L, W, Wq, Lq])
 
-mm1 = get_m_m_1(2.0, 3.0, 2.0, 12.0, 15.0)
-print(mm1)
+# mm1 = get_m_m_1(2.0, 3.0, 2.0, 12.0, 15.0)
+# print(mm1)
