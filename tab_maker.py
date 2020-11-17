@@ -400,7 +400,7 @@ def make_mmsk_tab(parent_tab, num_components):
     this_frame += 1
 
     ok_btn = tk.Button(master=k_frame, text="OK", anchor="c", command=lambda: get_results(Model.MMSK, {'server_num':s_entry.get(), 'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get(), 'k':k_entry.get()}))
-    ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
+    ok_btn.place(relx=0.40, rely=0.75, relheight=0.15, relwidth=0.2)
 
     parent_tab.add(mmsk_tab, text="M/M/s/k")
 
@@ -695,7 +695,7 @@ def make_mek1_tab(parent_tab, num_components):
     this_frame += 1
 
     ok_btn = tk.Button(master=Cw_frame, text="OK", anchor="c", command=lambda: get_results(
-        Model.MEK1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(),'erlang':k_entry, 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
+        Model.MEK1, {'lambda':l_entry.get(), 'miu':m_entry.get(), 'n':n_entry.get(),'erlang':k_entry.get(), 'cs':Cs_entry.get(), 'cw':Cw_entry.get()}))
 
     ok_btn.place(relx=0.40, rely=0.65, relheight=0.15, relwidth=0.2)
     parent_tab.add(mek1_tab, text="M/Ek/1")
