@@ -32,7 +32,7 @@ given_t_decription = "\tt provides the probability that the customer will be wai
 sigma_entry_description = "\tSigma"+u" \u03c3" + \
     " Denotes the standard deviation of the distribution related to the arrival of customers."
 k_entry_description = "\tk is used in a M/M/s/k system to represent how many customers can be expected in a long time period.\nif k is indefinite, use M/M/s"
-
+erlang_entry_description = "\tk, here, is used to represent the erlang degree of the system."
 
 class Model(Enum):
     MD1 = 1
@@ -360,7 +360,6 @@ def make_mmsk_tab(parent_tab, num_components):
                          font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
     Cs_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
     Cs_entry = tk.Entry(master=Cs_frame, font=FONT_SIZE)
-    Cs_entry.insert(0, u"\u03bc")
     Cs_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
     Cs_description = tk.Label(master=Cs_frame, text=server_cost_description,
                               foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
@@ -376,7 +375,6 @@ def make_mmsk_tab(parent_tab, num_components):
                          font=FONT_SIZE, background=BASE_COL, foreground=TEXT_COL)
     Cw_label.place(relx=0, rely=0, relheight=0.20, relwidth=0.25)
     Cw_entry = tk.Entry(master=Cw_frame, font=FONT_SIZE)
-    Cw_entry.insert(0, u"\u03bc")
     Cw_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
     Cw_description = tk.Label(master=Cw_frame, text=wait_cost_description,
                               foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
@@ -659,7 +657,7 @@ def make_mek1_tab(parent_tab, num_components):
     k_entry = tk.Entry(master=k_frame, font=FONT_SIZE)
     k_entry.insert(0, "k")
     k_entry.place(relx=0.3, rely=0.05, relheight=0.20, relwidth=0.25)
-    k_description = tk.Label(master=k_frame, text=k_entry_description,
+    k_description = tk.Label(master=k_frame, text=erlang_entry_description,
                              foreground=TEXT_COL, bg=BASE_COL, anchor="w", font=FONT_SIZE)
     k_description.place(relx=0, rely=0.3)
     this_frame += 1
